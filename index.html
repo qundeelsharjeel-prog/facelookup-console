@@ -1,0 +1,381 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>FaceLookup Console</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Layout: floating dark sidebar + content column on desktop; sidebar becomes a scrolling top bar on phones. Material 3 tones in a deep violet. */
+:root{
+  --display:'Sora','Segoe UI',system-ui,sans-serif;--body:'DM Sans','Segoe UI',system-ui,sans-serif;
+  --bg:#F5F2FB;--surface:#FFFFFF;--surface-2:#EEE9F8;--ink:#1B1829;--ink-2:#58526B;--line:#E0D9EE;
+  --primary:#5A3FC0;--on-primary:#FFFFFF;--primary-c:#E4DBFF;--on-primary-c:#1F0A66;
+  --ok:#17713A;--ok-c:#CDEFD6;--warn:#8A4B00;--warn-c:#FFE2BD;--err:#B3261E;--err-c:#FADBD8;
+  --side:#1F1740;--side-on:#D3CCEB;--side-act:#4A3A9E;--grad-a:#5A3FC0;--grad-b:#9A82F7;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#13101D;--surface:#1D192B;--surface-2:#2A2540;--ink:#EDE8F7;--ink-2:#B2AAC6;--line:#3A3350;
+  --primary:#BBA7FF;--on-primary:#23145A;--primary-c:#3C2D80;--on-primary-c:#E4DBFF;
+  --ok:#7FD99B;--ok-c:#1E4A2D;--warn:#FFC27A;--warn-c:#4D3410;--err:#FFB4AB;--err-c:#5C1C17;
+  --side:#0F0B1F;--side-on:#C9C1E3;--side-act:#3C2D80;--grad-a:#4B33A8;--grad-b:#7F66E8;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#13101D;--surface:#1D192B;--surface-2:#2A2540;--ink:#EDE8F7;--ink-2:#B2AAC6;--line:#3A3350;
+  --primary:#BBA7FF;--on-primary:#23145A;--primary-c:#3C2D80;--on-primary-c:#E4DBFF;
+  --ok:#7FD99B;--ok-c:#1E4A2D;--warn:#FFC27A;--warn-c:#4D3410;--err:#FFB4AB;--err-c:#5C1C17;
+  --side:#0F0B1F;--side-on:#C9C1E3;--side-act:#3C2D80;--grad-a:#4B33A8;--grad-b:#7F66E8;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.5 var(--body);padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);margin:0;letter-spacing:-.01em;text-wrap:balance}
+p{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.ic{width:20px;height:20px;fill:currentColor;flex:none}
+:focus-visible{outline:3px solid var(--primary);outline-offset:2px}
+.app{display:grid;grid-template-columns:264px minmax(0,1fr);gap:20px;max-width:1480px;margin:0 auto}
+.side{position:sticky;top:16px;height:calc(100vh - 32px);min-height:560px;max-height:900px;background:var(--side);border-radius:28px;padding:22px 16px;display:flex;flex-direction:column;gap:6px;overflow:auto}
+.brand{display:flex;align-items:center;gap:12px;padding:4px 10px 22px;color:#fff;font:700 19px var(--display)}
+.mark{width:40px;height:40px;border-radius:13px;background:linear-gradient(135deg,#7F67BE,#D0BCFF);display:grid;place-items:center;color:#fff}
+.navb{display:flex;align-items:center;gap:14px;width:100%;border:0;background:none;color:var(--side-on);padding:13px 16px;border-radius:999px;font-weight:500;font-size:14px;text-align:left;white-space:nowrap}
+.navb:hover{background:rgba(255,255,255,.07)}
+.navb.on{background:var(--side-act);color:#fff;font-weight:700}
+.sp{flex:1}
+.usercard{display:flex;align-items:center;gap:12px;padding:12px;border-radius:18px;background:rgba(255,255,255,.07);color:#fff;font-size:13px}
+.usercard small{display:block;color:var(--side-on);font-size:12px}
+.main{min-width:0;display:flex;flex-direction:column;gap:20px}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.head h1{font-size:28px;font-weight:700}
+.sub{color:var(--ink-2);margin-top:4px}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;border-radius:999px;padding:11px 22px;font-weight:700;font-size:14px;background:var(--primary);color:var(--on-primary);transition:filter .15s,transform .1s}
+.btn:hover{filter:brightness(1.08)}.btn:active{transform:scale(.98)}
+.btn.tonal{background:var(--primary-c);color:var(--on-primary-c)}
+.btn.ghost{background:transparent;color:var(--primary);border-color:var(--line)}
+.btn.danger{background:var(--err-c);color:var(--err)}
+.btn.block{width:100%}.btn[disabled]{opacity:.55;pointer-events:none}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:22px;min-width:0}
+.card h2{font-size:18px;font-weight:700}
+.cardhead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}
+.link{background:none;border:0;color:var(--primary);font-weight:700;font-size:14px;padding:4px}
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px}
+.stat{display:flex;flex-direction:column;gap:6px}
+.stat .top{display:flex;justify-content:space-between;align-items:center;color:var(--ink-2);font-weight:500;font-size:14px}
+.stat .ib{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:var(--primary-c);color:var(--on-primary-c)}
+.stat b{font:700 40px/1.1 var(--display);font-variant-numeric:tabular-nums}
+.stat small{font-weight:500;color:var(--ink-2)}
+.stat.hero{background:linear-gradient(135deg,var(--grad-a),var(--grad-b));border:0;color:#fff}
+.stat.hero .top,.stat.hero small{color:#EADFFF}.stat.hero .ib{background:rgba(255,255,255,.2);color:#fff}
+.two{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:20px}
+.split{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:20px;align-items:start}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 11px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+.chip.ok{background:var(--ok-c);color:var(--ok)}.chip.warn{background:var(--warn-c);color:var(--warn)}.chip.err{background:var(--err-c);color:var(--err)}.chip.pri{background:var(--primary-c);color:var(--on-primary-c)}
+.row{display:flex;align-items:center;gap:14px;padding:12px 8px;border-radius:14px;cursor:pointer;border-top:1px solid var(--line)}
+.row:first-of-type{border-top:0}.row:hover{background:var(--surface-2)}
+.row .grow{flex:1;min-width:0}.row b{display:block;font-weight:700}.row small{color:var(--ink-2)}
+.av{border-radius:50%;display:inline-grid;place-items:center;font-weight:700;color:#fff;flex:none}
+.photo{position:relative;aspect-ratio:1/1;max-width:100%;border-radius:20px;overflow:hidden;background:var(--surface-2)}
+.photo img,.photo .face{width:100%;height:100%;object-fit:cover;display:block}
+.photo.sm{width:84px;border-radius:14px}
+.photo .tag{position:absolute;left:10px;bottom:10px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px}
+.scanline{position:absolute;left:0;right:0;top:0;height:3px;background:var(--primary);box-shadow:0 0 18px 4px var(--primary);animation:scan 1.1s ease-in-out infinite alternate}
+@keyframes scan{from{top:4%}to{top:94%}}
+.scanwrap{border:3px solid var(--primary);border-radius:24px;padding:6px}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field label{font-size:12px;font-weight:700;color:var(--ink-2)}
+.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;font-size:14px}
+.field textarea{min-height:88px;resize:vertical}
+.frow{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.form{display:flex;flex-direction:column;gap:16px}
+.err-t{color:var(--err);font-size:13px;font-weight:500}
+.check{display:flex;align-items:center;gap:10px;font-weight:500}
+.check input{width:20px;height:20px;accent-color:var(--primary)}
+.drop{border:2px dashed var(--primary);background:var(--primary-c);color:var(--on-primary-c);border-radius:24px;min-height:320px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:28px}
+.drop.over{background:var(--surface-2)}
+.drop .big{width:84px;height:84px;border-radius:50%;background:var(--surface);color:var(--primary);display:grid;place-items:center}
+.drop .big .ic{width:40px;height:40px}
+.drop h2{font-size:22px}.drop p{opacity:.85}
+.steps{display:flex;flex-direction:column;gap:14px;padding:0;margin:12px 0 0;list-style:none;counter-reset:s}
+.steps li{display:flex;gap:12px;counter-increment:s}
+.steps li::before{content:counter(s);flex:none;width:28px;height:28px;border-radius:50%;background:var(--primary-c);color:var(--on-primary-c);display:grid;place-items:center;font-weight:700;font-size:13px}
+.demo{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.demo button{border:1px solid var(--line);background:var(--surface);border-radius:18px;padding:10px;display:flex;flex-direction:column;gap:8px;text-align:left;font-weight:700;font-size:13px}
+.demo button:hover{border-color:var(--primary)}
+.demo .photo{aspect-ratio:4/3;border-radius:12px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--surface)}
+.seg button{border:0;background:none;padding:8px 16px;border-radius:999px;font-weight:700;font-size:13px;color:var(--ink-2)}
+.seg button.on{background:var(--primary-c);color:var(--on-primary-c)}
+.meter{height:10px;border-radius:999px;background:var(--surface-2);overflow:hidden}
+.meter i{display:block;height:100%;width:0;border-radius:999px;background:var(--ok);transition:width .9s cubic-bezier(.2,.8,.2,1)}
+.meter i.warn{background:var(--warn)}.meter i.err{background:var(--err)}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.kv div{background:var(--surface-2);border-radius:16px;padding:12px 16px;min-width:0}
+.kv small{display:block;color:var(--ink-2);font-size:12px;font-weight:500}
+.kv b{display:block;font-weight:700;overflow-wrap:anywhere}
+.toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.search{flex:1;min-width:220px;display:flex;align-items:center;gap:10px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:0 18px}
+.search input{flex:1;min-width:0;border:0;background:none;padding:13px 0;outline:0}
+.search:focus-within{border-color:var(--primary)}
+.fchip{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:9px 16px;font-weight:700;font-size:13px;color:var(--ink-2)}
+.fchip.on{background:var(--primary-c);color:var(--on-primary-c);border-color:transparent}
+.tbl{overflow-x:auto}
+.tr{display:grid;grid-template-columns:var(--cols);gap:12px;align-items:center;padding:10px 14px;min-width:760px;border-top:1px solid var(--line)}
+.tr.th{background:var(--surface-2);border:0;border-radius:12px;font-size:12px;font-weight:700;color:var(--ink-2)}
+.tr.b{cursor:pointer;border-radius:12px}.tr.b:hover{background:var(--surface-2)}
+.tr .pn{display:flex;align-items:center;gap:12px;min-width:0}.tr .pn b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tr .mut{color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pager{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:12px;flex-wrap:wrap;color:var(--ink-2);font-size:13px}
+.pager div{display:flex;gap:6px}
+.pager button{width:36px;height:36px;border-radius:50%;border:0;background:none;font-weight:700;color:var(--ink-2)}
+.pager button.on{background:var(--primary);color:var(--on-primary)}
+.bars{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;height:200px;padding-top:12px}
+.bars div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;height:100%;font-size:12px;color:var(--ink-2)}
+.bars i{display:block;width:100%;max-width:34px;border-radius:10px;background:var(--primary-c)}
+.bars .now i{background:var(--primary)}.bars .now{color:var(--primary);font-weight:700}
+.note{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:14px;background:var(--surface-2);color:var(--ink-2);font-size:13px}
+.confirm{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:16px;background:var(--err-c);color:var(--err);font-weight:500}
+.strip{display:flex;gap:12px;flex-wrap:wrap}
+.login{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);min-height:calc(100vh - 32px);border-radius:32px;overflow:hidden;background:var(--surface);border:1px solid var(--line);max-width:1480px;margin:0 auto}
+.lhero{position:relative;overflow:hidden;background:linear-gradient(145deg,#33246B,#5A3FC0 55%,#A894FA);color:#fff;padding:clamp(28px,6vw,80px);display:flex;flex-direction:column;justify-content:center;gap:24px}
+.lhero::before,.lhero::after{content:"";position:absolute;border-radius:50%;background:rgba(255,255,255,.09)}
+.lhero::before{width:440px;height:440px;right:-140px;top:-150px}.lhero::after{width:300px;height:300px;left:-90px;bottom:-110px}
+.lhero>*{position:relative}
+.lhero h1{font-size:clamp(30px,4.4vw,48px);line-height:1.1;font-weight:800}
+.lhero p{color:#E8DEF8;font-size:17px;max-width:46ch}
+.lhero ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;font-weight:500}
+.lhero li{display:flex;gap:12px;align-items:center}.lhero li .ic{color:#D0BCFF}
+.lform{display:flex;align-items:center;justify-content:center;padding:clamp(24px,5vw,60px)}
+.lform form{width:100%;max-width:420px;display:flex;flex-direction:column;gap:18px}
+.lform h2{font-size:32px;font-weight:800}
+.pw{position:relative}.pw button{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--ink-2);padding:8px;display:grid}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,30px);background:var(--ink);color:var(--bg);padding:12px 22px;border-radius:14px;font-weight:700;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:20;max-width:calc(100vw - 32px)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media (max-width:1000px){.two,.split{grid-template-columns:minmax(0,1fr)}.split>.card:first-child{max-width:420px}}
+@media (max-width:900px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .side{position:static;height:auto;min-height:0;max-height:none;flex-direction:row;align-items:center;gap:4px;padding:10px;border-radius:22px;overflow-x:auto}
+  .brand{padding:0 10px 0 4px}.brand span{display:none}.usercard{display:none}.sp{display:none}
+  .navb{width:auto;padding:11px 14px}.navb span{display:none}
+  .navb.show-label span{display:inline}
+  .login{grid-template-columns:minmax(0,1fr)}.lhero{padding:32px 24px}.lhero p,.lhero ul{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div id="root"></div>
+<input type="file" id="f-search" accept="image/*" hidden>
+<input type="file" id="f-search-cam" accept="image/*" capture="user" hidden>
+<input type="file" id="f-reg" accept="image/*" hidden>
+<input type="file" id="f-reg-cam" accept="image/*" capture="user" hidden>
+<input type="file" id="f-add" accept="image/*" hidden>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const ICON={
+dashboard:'M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z',
+search:'M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z',
+person_add:'M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z',
+group:'M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z',
+history:'M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z',
+logout:'M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z',
+face:'M9 11.75a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5zm6 0a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8 0-.29.02-.58.05-.86 2.36-1.05 4.23-2.98 5.21-5.37C11.07 7.04 13.76 8.5 16.9 8.5c.76 0 1.5-.08 2.2-.24.58 1.04.9 2.23.9 3.49 0 4.41-3.59 8-8 8z',
+check_circle:'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z',
+check:'M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z',
+shield:'M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z',
+mail:'M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z',
+lock:'M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z',
+chevron:'M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z',
+upload:'M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z',
+camera:'M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z',
+badge:'M20 7h-5V4c0-1.1-.9-2-2-2h-2c-1.1 0-2 .9-2 2v3H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zM9 12c.83 0 1.5.67 1.5 1.5S9.83 15 9 15s-1.5-.67-1.5-1.5S8.17 12 9 12zm3 6H6v-.75c0-1 2-1.5 3-1.5s3 .5 3 1.5V18zm1-9h-2V4h2v5z',
+phone:'M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z',
+arrow_back:'M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z',
+delete:'M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z',
+edit:'M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z',
+copy:'M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z',
+eye:'M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z',
+theme:'M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69zM12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z',
+error:'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z',
+pin:'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z'};
+const ic=n=>`<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="${ICON[n]}"/></svg>`;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $=s=>document.querySelector(s);
+const PAL=[['#7B5CE6','#C9B8FF'],['#2E8B7A','#9FE3D2'],['#D9822B','#FFD39A'],['#3B7DDD','#A9CCFF'],['#C2457C','#FFB3D3'],['#6B7A2A','#D8E58F']];
+let gid=0;
+const face=h=>{const [a,b]=PAL[((h%6)+6)%6];const id='fg'+(gid++);return `<svg class="face" viewBox="0 0 120 120" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><rect width="120" height="120" fill="url(#${id})"/><circle cx="60" cy="48" r="20" fill="#fff" fill-opacity=".88"/><path d="M18 120c0-26 19-42 42-42s42 16 42 42z" fill="#fff" fill-opacity=".88"/></svg>`};
+
+/* ---------- mock data ---------- */
+const P=[
+{id:1,name:'Ahmed Khan',cnic:'35202-1234567-1',phone:'0300-1234567',cat:'Employee',addr:'Gulberg III, Lahore',reg:'12 Oct 2026',notes:'Operations team',hue:0,photos:[]},
+{id:2,name:'Fatima Noor',cnic:'35201-7654321-2',phone:'0321-9876543',cat:'Student',addr:'Johar Town, Lahore',reg:'10 Oct 2026',notes:'Grade 10, Section B',hue:4,photos:[]},
+{id:3,name:'Bilal Raza',cnic:'35202-1122334-5',phone:'0333-4455667',cat:'Employee',addr:'DHA Phase 5, Lahore',reg:'03 Oct 2026',notes:'Warehouse supervisor',hue:3,photos:[]},
+{id:4,name:'Usman Ali',cnic:'35200-9988776-3',phone:'0345-1112223',cat:'Visitor',addr:'Model Town, Lahore',reg:'28 Sep 2026',notes:'Vendor, visits weekly',hue:2,photos:[]},
+{id:5,name:'Ayesha Siddiqui',cnic:'35201-5566778-6',phone:'0312-3344556',cat:'Student',addr:'Wapda Town, Lahore',reg:'21 Sep 2026',notes:'Scholarship student',hue:1,photos:[]},
+{id:6,name:'Hamza Sheikh',cnic:'35202-3344556-7',phone:'0302-7788990',cat:'Employee',addr:'Bahria Town, Lahore',reg:'15 Sep 2026',notes:'Accounts department',hue:5,photos:[]},
+{id:7,name:'Zainab Malik',cnic:'35201-6677889-8',phone:'0340-2233445',cat:'Member',addr:'Faisal Town, Lahore',reg:'02 Sep 2026',notes:'Annual member',hue:4,photos:[]},
+{id:8,name:'Saad Mahmood',cnic:'35200-2211003-9',phone:'0336-5566778',cat:'Visitor',addr:'Iqbal Town, Lahore',reg:'25 Aug 2026',notes:'Contractor',hue:3,photos:[]},
+{id:9,name:'Mariam Qureshi',cnic:'35202-8899001-4',phone:'0315-6677889',cat:'Employee',addr:'Cantt, Lahore',reg:'18 Aug 2026',notes:'HR department',hue:0,photos:[]},
+{id:10,name:'Hassan Javed',cnic:'35201-4433221-5',phone:'0322-1100998',cat:'Member',addr:'Samanabad, Lahore',reg:'09 Aug 2026',notes:'Monthly member',hue:2,photos:[]},
+{id:11,name:'Sana Iqbal',cnic:'35200-7766554-2',phone:'0331-5544332',cat:'Student',addr:'Garden Town, Lahore',reg:'30 Jul 2026',notes:'Grade 8',hue:1,photos:[]},
+{id:12,name:'Daniyal Butt',cnic:'35202-2233445-8',phone:'0344-9988776',cat:'Visitor',addr:'Shadman, Lahore',reg:'22 Jul 2026',notes:'Guest, Block C',hue:5,photos:[]}];
+const LOGS=[
+{t:'06 Nov · 04:02 PM',u:'Staff Ali',pid:1,c:92},{t:'06 Nov · 03:48 PM',u:'Staff Sana',pid:null,c:38},{t:'06 Nov · 03:21 PM',u:'Qundeel',pid:2,c:71},
+{t:'06 Nov · 02:55 PM',u:'Staff Ali',pid:3,c:89},{t:'06 Nov · 11:10 AM',u:'Staff Sana',pid:4,c:94},{t:'05 Nov · 05:30 PM',u:'Staff Ali',pid:null,c:29},
+{t:'05 Nov · 03:12 PM',u:'Qundeel',pid:6,c:91},{t:'05 Nov · 10:40 AM',u:'Staff Sana',pid:5,c:77},{t:'04 Nov · 04:20 PM',u:'Staff Ali',pid:7,c:95},{t:'04 Nov · 12:05 PM',u:'Staff Sana',pid:null,c:41}];
+const WEEK=['Sat','Sun','Mon','Tue','Wed','Thu','Fri'],WEEKV=[9,6,14,22,18,31];
+const S={user:null,photo:null,demoHue:null,ready:false,sim:'match',targetId:null,res:null,pid:null,edit:false,del:false,pq:'',pcat:'All',ppage:1,lq:'',lf:'All',draft:undefined};
+const KEY='facelookup.v1';let warned=false;
+function save(){try{localStorage.setItem(KEY,JSON.stringify({P,LOGS,user:S.user,view:S.view,st:{photo:S.photo,ready:S.ready,sim:S.sim,demoHue:S.demoHue,targetId:S.targetId,res:S.res,pid:S.pid,draft:S.draft},theme:document.documentElement.getAttribute('data-theme')}))}catch(e){if(!warned){warned=true;try{toast('Browser storage is full. Recent changes may not be kept.')}catch(_){}}}}
+(function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||'null');if(d&&Array.isArray(d.P)&&Array.isArray(d.LOGS)){P.splice(0,P.length,...d.P);LOGS.splice(0,LOGS.length,...d.LOGS);S.user=d.user||null;S.last=d.view||null;Object.assign(S,d.st||{});if(d.theme)document.documentElement.setAttribute('data-theme',d.theme)}}catch(e){}})();
+const pById=id=>P.find(p=>p.id===id);
+const initials=n=>n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+const av=(p,s=40)=>`<span class="av" style="width:${s}px;height:${s}px;background:${PAL[p.hue%6][0]};font-size:${Math.round(s*.36)}px">${initials(p.name)}</span>`;
+const unk=(s=40)=>`<span class="av" style="width:${s}px;height:${s}px;background:var(--err-c);color:var(--err);font-size:${Math.round(s*.42)}px">?</span>`;
+const pic=(p,i=0)=>p.photos[i]?`<img src="${p.photos[i]}" alt="${esc(p.name)}">`:face(p.hue+i);
+const stat=l=>l.pid===null?['Not found','err']:l.c>=80?['Matched','ok']:['Confirm','warn'];
+const clock=()=>{const d=new Date();let h=d.getHours();const ap=h>=12?'PM':'AM';h=h%12||12;return `06 Nov · ${String(h).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} ${ap}`};
+const today=()=>LOGS.filter(l=>l.t.startsWith('06 Nov'));
+let tt;const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2600)};
+
+/* ---------- building blocks ---------- */
+const head=(t,s,a='')=>`<div class="head"><div><h1>${t}</h1><p class="sub">${s}</p></div><div class="actions">${a}</div></div>`;
+const btn=(label,kind,icon,attrs)=>`<button class="btn ${kind}" ${attrs}>${icon?ic(icon):''}${label}</button>`;
+const chip=(t,k)=>`<span class="chip ${k}">${t}</span>`;
+const NAVS=[['dashboard','Dashboard','dashboard'],['search','Search by photo','search'],['register','Register person','person_add'],['persons','All persons','group'],['logs','Search logs','history']];
+const GRP={dashboard:'dashboard',search:'search','search-ready':'search',result:'search','not-found':'search',register:'register',persons:'persons',profile:'persons',logs:'logs'};
+const shell=(v,inner)=>`<div class="app"><aside class="side"><div class="brand"><span class="mark">${ic('face')}</span><span>FaceLookup</span></div>${NAVS.map(n=>`<button class="navb ${GRP[v]===n[0]?'on':''}" data-go="${n[0]}" aria-label="${n[1]}">${ic(n[2])}<span>${n[1]}</span></button>`).join('')}<div class="sp"></div><button class="navb" data-act="reset" aria-label="Reset demo data">${ic('delete')}<span>Reset demo data</span></button><button class="navb" data-act="theme" aria-label="Toggle theme">${ic('theme')}<span>Light / dark</span></button><div class="usercard">${`<span class="av" style="width:38px;height:38px;background:#D0BCFF;color:#21005D;font-size:14px">${initials(S.user.name)}</span>`}<div>${esc(S.user.name)}<small>Admin</small></div></div><button class="navb" data-act="logout" aria-label="Log out">${ic('logout')}<span>Log out</span></button></aside><main class="main">${inner}</main></div>`;
+const cap=(cls,v)=>`<div class="seg" role="group">${v.map(x=>`<button class="${S[cls]===x[0]?'on':''}" data-act="${cls==='sim'?'sim':cls==='lf'?'lf':'pcat'}" data-v="${x[0]}">${x[1]}</button>`).join('')}</div>`;
+
+/* ---------- views ---------- */
+const V={};
+V.login=()=>`<div class="login"><section class="lhero"><div style="display:flex;align-items:center;gap:14px"><span class="mark" style="width:48px;height:48px">${ic('face')}</span><b style="font:700 24px var(--display)">FaceLookup</b></div><h1>Identify registered people, in seconds.</h1><p>Upload a photo and the system shows the saved details. Search only covers people who were registered with their consent.</p><ul><li>${ic('check_circle')}Accurate face-embedding matching</li><li>${ic('check_circle')}Audit log for every search</li><li>${ic('check_circle')}Encrypted biometric data</li></ul></section><section class="lform"><form id="lform" novalidate><div><h2>Welcome back</h2><p class="sub">Sign in with your staff account</p></div><div class="field"><label for="l-email">Email</label><input id="l-email" type="email" value="staff@facelookup.pk" autocomplete="username"></div><div class="field"><label for="l-pass">Password</label><div class="pw"><input id="l-pass" type="password" value="demo1234" autocomplete="current-password"><button type="button" data-act="togglepw" aria-label="Show password">${ic('eye')}</button></div></div><p class="err-t" id="lerr" hidden></p><button class="btn block" style="padding:15px">Login</button><div class="note">${ic('shield')}<span>Demo account: any email and password will sign you in. Authorized staff only; every login and search is recorded. Your changes are saved in this browser.</span></div></form></section></div>`;
+
+V.dashboard=()=>{const t=today();const mt=t.filter(l=>l.pid&&l.c>=80).length,nf=t.filter(l=>l.pid===null).length;const vals=[...WEEKV,t.length];const mx=Math.max(...vals);
+return shell('dashboard',head('Dashboard',`Welcome back, ${esc(S.user.name)}. Here's today's overview.`,btn('New search','tonal','search','data-go="search"')+btn('Register person','','person_add','data-go="register"'))+
+`<div class="grid4"><div class="card stat hero"><div class="top">Registered persons<span class="ib">${ic('group')}</span></div><b>${P.length}</b><small>+3 this week</small></div><div class="card stat"><div class="top">Searches today<span class="ib">${ic('search')}</span></div><b>${t.length}</b><small style="color:var(--ok)">+2 vs yesterday</small></div><div class="card stat"><div class="top">Matches found<span class="ib">${ic('check_circle')}</span></div><b>${mt}</b><small style="color:var(--ok)">${t.length?Math.round(mt/t.length*100):0}% success rate</small></div><div class="card stat"><div class="top">Not registered<span class="ib">${ic('error')}</span></div><b>${nf}</b><small style="color:var(--err)">Needs review</small></div></div>
+<div class="two"><div class="card"><div class="cardhead"><h2>Recent searches</h2><button class="link" data-go="logs">View all logs</button></div>${LOGS.slice(0,5).map((l,i)=>{const p=l.pid&&pById(l.pid);const s=stat(l);return `<div class="row" role="button" tabindex="0" data-act="openlog" data-i="${i}">${p?av(p,44):unk(44)}<div class="grow"><b>${p?esc(p.name):'Not registered'}</b><small>${esc(l.u)} · ${l.t.split(' · ')[1]}</small></div>${chip(l.pid?l.c+'% '+s[0].toLowerCase():s[0],s[1])}</div>`}).join('')}</div>
+<div class="card"><h2>Searches this week</h2><p class="sub">${vals.reduce((a,b)=>a+b,0)} total · last 7 days</p><div class="bars">${vals.map((v,i)=>`<div class="${i===6?'now':''}"><span>${v}</span><i style="height:${Math.max(6,Math.round(v/mx*150))}px"></i>${WEEK[i]}</div>`).join('')}</div><div class="note" style="margin-top:14px">${ic('shield')}<span>Match threshold 80% · below that, staff must confirm.</span></div></div></div>`)};
+
+V.search=()=>shell('search',head('Search by photo','Upload a photo and the system looks for a match among registered people.')+
+`<div class="split" style="grid-template-columns:minmax(0,1fr) minmax(0,340px)"><div class="drop" data-drop="search"><div class="big">${ic('face')}</div><h2>Drop a photo here</h2><p>JPG or PNG, one face per photo</p><div class="actions" style="justify-content:center">${btn('Upload photo','','upload','data-act="pick-search"')}${btn('Take photo','tonal','camera','data-act="pick-search-cam"')}</div></div>
+<div style="display:flex;flex-direction:column;gap:20px"><div class="card"><h2>How it works</h2><ol class="steps"><li><span><b>Upload a photo</b><br><small class="sub">Front-facing, good light.</small></span></li><li><span><b>Face is matched</b><br><small class="sub">Compared with registered people only.</small></span></li><li><span><b>See the details</b><br><small class="sub">Confidence score and saved profile.</small></span></li></ol></div>
+<div class="card"><h2>Try a demo photo</h2><p class="sub">This prototype simulates the match.</p><div class="demo"><button data-act="demo-match"><div class="photo">${face(0)}</div>Registered face</button><button data-act="demo-none"><div class="photo">${face(5)}</div>Unknown face</button></div></div></div></div>`);
+
+V['search-ready']=()=>shell('search',head('Ready to search','Check the photo, then run the search.',btn('Change photo','ghost','upload','data-go="search"'))+
+`<div class="split"><div class="card"><div class="scanwrap"><div class="photo" id="prev">${S.photo?`<img src="${S.photo.url}" alt="Selected photo">`:face(S.demoHue??0)}<div class="scanline" id="scan" hidden></div></div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">${chip('1 face detected','ok')}<span class="sub">${S.photo?esc(S.photo.name):'Demo photo'}</span></div></div>
+<div class="card form">${S.photo&&S.photo.h?'<div><h2>Compare with registered photos</h2><p class="sub">This prototype compares the photo with the photos saved at registration. Search with the same photo you registered to see a match.</p></div>':`<div><h2>Simulate result</h2><p class="sub">The real system would run face matching here. Choose what this prototype should return.</p></div>${cap('sim',[['match','Registered face'],['none','Unknown face']])}`}<div class="actions">${btn('Search now','','search','id="go-scan" data-act="scan"')}${btn('Cancel','ghost','','data-go="search"')}</div><div class="note">${ic('shield')}<span>Only registered people are searched. If nothing passes the threshold, the system says so and never guesses.</span></div></div></div>`);
+
+V.result=()=>{const r=S.res,p=pById(r.pid);const k=r.c>=80?'ok':'warn';
+return shell('search',head('Match result','Search outcome and saved details.',btn('New search','ghost','search','data-go="search"'))+
+`<div class="split"><div style="display:flex;flex-direction:column;gap:20px"><div class="card"><h2 style="margin-bottom:12px">Searched photo</h2><div class="photo">${r.photo?`<img src="${r.photo.url}" alt="Searched photo">`:face(p.hue+1)}${r.photo?'':'<span class="tag">Sample photo</span>'}</div></div></div>
+<div class="card form"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><div style="display:flex;align-items:center;gap:14px">${av(p,56)}<div><h2 style="font-size:26px">${esc(p.name)}</h2><p class="sub">${chip(esc(p.cat),'pri')}</p></div></div>${chip(r.c>=80?'Match found':'Please confirm',k)}</div>
+<div><div style="display:flex;justify-content:space-between;font-weight:700;margin-bottom:8px"><span>Confidence</span><span>${r.c}%</span></div><div class="meter"><i class="${k==='warn'?'warn':''}" id="meter" data-w="${r.c}"></i></div>${r.c<80?'<p class="sub" style="margin-top:8px">Below the 80% threshold. A staff member must confirm this match.</p>':''}</div>
+<div class="kv"><div><small>CNIC / ID</small><b>${p.cnic}</b></div><div><small>Phone</small><b>${p.phone}</b></div><div><small>Category</small><b>${p.cat}</b></div><div><small>Address</small><b>${esc(p.addr)}</b></div><div><small>Registered on</small><b>${p.reg}</b></div><div><small>Notes</small><b>${esc(p.notes)}</b></div></div>
+<div class="actions">${btn('Full profile','','person_add','data-go="profile" data-pid="'+p.id+'"')}${btn('Add this photo','tonal','upload','data-act="add-from-result"')}${btn('New search','ghost','search','data-go="search"')}</div>
+${r.others&&r.others.length?`<div><h2 style="font-size:16px;margin-bottom:6px">Other possible matches</h2>${r.others.map(o=>{const q=pById(o.pid);return `<div class="row" role="button" tabindex="0" data-act="pick-other" data-pid="${q.id}" data-c="${o.c}">${av(q,40)}<div class="grow"><b>${esc(q.name)}</b><small>${q.cat}</small></div>${chip(o.c+'%','warn')}</div>`}).join('')}</div>`:''}</div></div>`)};
+
+V['not-found']=()=>{const r=S.res;return shell('search',head('No match found','This face is not in the registered list.',btn('New search','ghost','search','data-go="search"'))+
+`<div class="card" style="display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:28px;align-items:center"><div class="photo">${r.photo?`<img src="${r.photo.url}" alt="Searched photo">`:face(5)}</div><div class="form"><span class="av" style="width:64px;height:64px;background:var(--err-c);color:var(--err)">${ic('error')}</span><h2 style="font-size:30px">Not registered</h2><p class="sub">No registered person passed the match threshold, so the system returns nothing instead of guessing.</p><div><div style="display:flex;justify-content:space-between;font-weight:700;margin-bottom:8px"><span>Highest similarity</span><span>${r.best}%</span></div><div class="meter"><i class="err" id="meter" data-w="${r.best}"></i></div><p class="sub" style="margin-top:8px">Threshold: 80%</p></div><div class="actions">${btn('Register this person','','person_add','data-act="reg-from-nf"')}${btn('Try another photo','ghost','search','data-go="search"')}</div></div></div>`)};
+
+const catOpts=c=>['Employee','Student','Visitor','Member'].map(x=>`<option ${x===c?'selected':''}>${x}</option>`).join('');
+V.register=()=>{if(S.draft===undefined)S.draft={sample:true,hue:3};const d=S.draft;
+return shell('register',head('Register person','Save the photo and details. Consent is required.')+
+`<div class="split"><div class="card form"><h2>Face photo</h2><div class="photo">${d&&d.url?`<img src="${d.url}" alt="Uploaded photo">`:d?face(d.hue??3):'<div style="height:100%;display:grid;place-items:center;color:var(--ink-2)">No photo yet</div>'}</div>${d?(d.url?chip('Face detected','ok'):chip('Sample photo, not searchable','warn')):chip('Photo required','err')}${d&&d.name?`<span class="sub">${esc(d.name)}</span>`:''}${btn(d?'Change photo':'Upload photo','tonal','upload','data-act="reg-photo"')}${btn('Take photo','ghost','camera','data-act="reg-cam"')}${d?'':btn('Use sample photo','ghost','face','data-act="reg-sample"')}<div class="note">${ic('shield')}<span>Front-facing photo, good lighting, no glasses or mask.</span></div></div>
+<form class="card form" id="rform" novalidate><h2>Person details</h2><div class="frow"><div class="field"><label for="r-name">Full name</label><input id="r-name" value="Hira Tariq"></div><div class="field"><label for="r-cnic">CNIC / ID</label><input id="r-cnic" value="35201-4455667-1" placeholder="35201-1234567-1"></div></div><div class="frow"><div class="field"><label for="r-phone">Phone</label><input id="r-phone" value="0311-2233445"></div><div class="field"><label for="r-cat">Category</label><select id="r-cat">${catOpts('Student')}</select></div></div><div class="field"><label for="r-addr">Address</label><input id="r-addr" value="Model Town, Lahore"></div><div class="field"><label for="r-notes">Notes</label><textarea id="r-notes" placeholder="Add any additional details..."></textarea></div><label class="check"><input type="checkbox" id="r-consent" checked>Person's consent has been obtained</label><p class="err-t" id="rerr" hidden></p><div class="actions"><button class="btn">${ic('check')}Save person</button>${btn('Cancel','ghost','','type="button" data-go="persons"')}</div></form></div>`)};
+
+const pFilter=()=>{const q=S.pq.toLowerCase();const list=P.filter(p=>(S.pcat==='All'||p.cat===S.pcat)&&(!q||[p.name,p.cnic,p.phone].some(x=>x.toLowerCase().includes(q))));const pages=Math.max(1,Math.ceil(list.length/6));if(S.ppage>pages)S.ppage=pages;return{list,pages,slice:list.slice((S.ppage-1)*6,S.ppage*6)}};
+V.persons=()=>shell('persons',head('All persons',`${P.length} registered persons`,btn('Register person','','person_add','data-go="register"'))+
+`<div class="toolbar"><label class="search">${ic('search')}<input id="pq" placeholder="Search by name, CNIC or phone..." value="${esc(S.pq)}" aria-label="Search persons"></label><div id="pchips"></div></div><div class="card"><div class="tbl" id="ptable"></div><div class="pager"><span id="pcount"></span><div id="ppager"></div></div></div>`);
+const paintPersons=()=>{const {list,pages,slice}=pFilter();const C='minmax(220px,2.2fr) 1.5fr 1.2fr 1fr 1fr 24px';
+$('#pchips').innerHTML=cap('pcat',['All','Employee','Student','Visitor','Member'].map(x=>[x,x])).replace('class="seg"','class="seg" style="flex-wrap:wrap"');
+$('#ptable').innerHTML=`<div class="tr th" style="--cols:${C}"><span>Person</span><span>CNIC</span><span>Phone</span><span>Category</span><span>Registered</span><span></span></div>`+(slice.length?slice.map(p=>`<div class="tr b" style="--cols:${C}" role="button" tabindex="0" data-go="profile" data-pid="${p.id}"><span class="pn">${av(p,38)}<b>${esc(p.name)}</b></span><span class="mut">${p.cnic}</span><span class="mut">${p.phone}</span><span>${chip(p.cat,'pri')}</span><span class="mut">${p.reg.slice(0,6)}</span><span style="color:var(--primary)">${ic('chevron')}</span></div>`).join(''):'<p class="sub" style="padding:28px 14px">No one matches this search.</p>');
+$('#pcount').textContent=`Showing ${list.length?(S.ppage-1)*6+1:0}-${(S.ppage-1)*6+slice.length} of ${list.length}`;
+$('#ppager').innerHTML=Array.from({length:pages},(_,i)=>`<button class="${S.ppage===i+1?'on':''}" data-act="ppage" data-v="${i+1}" aria-label="Page ${i+1}">${i+1}</button>`).join('')};
+
+V.profile=()=>{const p=pById(S.pid);const logs=LOGS.filter(l=>l.pid===p.id);const all=p.photos.length?p.photos.map((_,i)=>i):['s1'];
+const fld=(id,l,v)=>`<div class="field"><label for="${id}">${l}</label><input id="${id}" value="${esc(v)}"></div>`;
+return shell('persons',head('Person profile','Saved details, photos and recent matches.',btn('Back','ghost','arrow_back','data-go="persons"'))+
+`<div class="split"><div class="card form"><div class="photo">${pic(p)}</div><div><h2 style="font-size:24px">${esc(p.name)}</h2><p style="margin-top:6px">${chip(p.cat,'pri')} ${chip('Consent on file','ok')}</p></div>${btn('Add photo','tonal','upload','data-act="add-photo"')}${btn(S.edit?'Editing...':'Edit details','ghost','edit',S.edit?'disabled':'data-act="edit"')}${S.del?`<div class="confirm"><span>Delete ${esc(p.name)} and all saved photos? This cannot be undone.</span><div class="actions">${btn('Delete','danger','delete','data-act="del-yes"')}${btn('Cancel','ghost','','data-act="del-no"')}</div></div>`:btn('Delete person','danger','delete','data-act="del"')}</div>
+<div style="display:flex;flex-direction:column;gap:20px"><div class="card form"><h2>Details</h2>${S.edit?`<div class="frow">${fld('e-name','Full name',p.name)}${fld('e-phone','Phone',p.phone)}</div><div class="frow"><div class="field"><label for="e-cat">Category</label><select id="e-cat">${catOpts(p.cat)}</select></div>${fld('e-addr','Address',p.addr)}</div>${fld('e-notes','Notes',p.notes)}<div class="actions">${btn('Save changes','','check','data-act="edit-save"')}${btn('Cancel','ghost','','data-act="edit-cancel"')}</div>`:`<div class="kv"><div><small>CNIC / ID</small><b>${p.cnic}</b></div><div><small>Phone</small><b>${p.phone}</b></div><div><small>Category</small><b>${p.cat}</b></div><div><small>Address</small><b>${esc(p.addr)}</b></div><div><small>Registered on</small><b>${p.reg}</b></div><div><small>Notes</small><b>${esc(p.notes)}</b></div></div>`}</div>
+<div class="card"><h2 style="margin-bottom:12px">Photos (${p.photos.length})</h2><div class="strip">${all.map((x,i)=>`<div class="photo sm">${typeof x==='number'?`<img src="${p.photos[x]}" alt="Photo ${i+1}">`:face(p.hue+i+1)}</div>`).join('')}</div>${p.photos.length?'':'<p class="sub" style="margin-top:12px">No photo uploaded yet. Add one to make this person searchable by photo.</p>'}</div>
+<div class="card"><h2>Recent matches</h2>${logs.length?logs.map(l=>`<div class="row" style="cursor:default"><div class="grow"><b>${l.t}</b><small>Searched by ${esc(l.u)}</small></div>${chip(l.c+'%',stat(l)[1])}</div>`).join(''):'<p class="sub" style="margin-top:8px">No searches have matched this person yet.</p>'}</div></div></div>`)};
+
+const lFilter=()=>{const q=S.lq.toLowerCase();return LOGS.map((l,i)=>({...l,i})).filter(l=>{const s=stat(l)[0];const p=l.pid&&pById(l.pid);return(S.lf==='All'||s===S.lf)&&(!q||[l.u,p?p.name:'not registered',l.t].some(x=>x.toLowerCase().includes(q)))})};
+V.logs=()=>shell('logs',head('Search logs','Audit trail: who searched, when, and what came back.',btn('Copy CSV','ghost','copy','data-act="csv"'))+
+`<div class="toolbar"><label class="search">${ic('search')}<input id="lq" placeholder="Filter by user, person or date..." value="${esc(S.lq)}" aria-label="Filter logs"></label><div id="lchips"></div></div><div class="card"><div class="tbl" id="ltable"></div></div>`);
+const paintLogs=()=>{const C='1.4fr 1fr 1.6fr .8fr 1fr 24px';const rows=lFilter();
+$('#lchips').innerHTML=cap('lf',['All','Matched','Confirm','Not found'].map(x=>[x,x]));
+$('#ltable').innerHTML=`<div class="tr th" style="--cols:${C}"><span>Date / time</span><span>User</span><span>Result</span><span>Confidence</span><span>Status</span><span></span></div>`+(rows.length?rows.map(l=>{const p=l.pid&&pById(l.pid);const s=stat(l);return `<div class="tr b" style="--cols:${C}" role="button" tabindex="0" data-act="openlog" data-i="${l.i}"><span>${l.t}</span><span class="mut">${esc(l.u)}</span><span class="pn">${p?av(p,32)+'<b>'+esc(p.name)+'</b>':unk(32)+'<b>Not registered</b>'}</span><span>${l.pid?l.c+'%':'—'}</span><span>${chip(s[0],s[1])}</span><span style="color:var(--primary)">${ic('chevron')}</span></div>`}).join(''):'<p class="sub" style="padding:28px 14px">No log entries match.</p>')};
+
+/* ---------- router ---------- */
+const AFTER={persons:paintPersons,logs:paintLogs,result:()=>setTimeout(()=>{const m=$('#meter');if(m)m.style.width=m.dataset.w+'%'},60),'not-found':()=>setTimeout(()=>{const m=$('#meter');if(m)m.style.width=m.dataset.w+'%'},60)};
+function render(){let n=location.hash.slice(1);if(!V[n])n=S.user?(V[S.last]&&S.last!=='login'?S.last:'dashboard'):'login';if(!S.user)n='login';
+if(n==='login'&&S.user)n='dashboard';
+if((n==='result'||n==='not-found')&&!S.res)n='search';if(n==='search-ready'&&!S.ready)n='search';if(n==='profile'&&!pById(S.pid))n='persons';
+S.view=n;$('#root').innerHTML=V[n]();if(AFTER[n])AFTER[n]();window.scrollTo(0,0);S.last=null;try{if(location.hash!=='#'+n)history.replaceState(null,'','#'+n)}catch(e){}save()}
+function go(n){if(location.hash==='#'+n)render();else location.hash=n}
+window.addEventListener('hashchange',render);
+
+/* ---------- actions ---------- */
+function runSearch(){if(S.photo&&S.photo.h)return realSearch();const hash=S.photo?[...S.photo.name].reduce((a,c)=>a+c.charCodeAt(0),0)+S.photo.size:11;const photo=S.photo;
+if(S.sim==='none'){const best=22+hash%24;LOGS.unshift({t:clock(),u:S.user.name,pid:null,c:best});S.res={none:true,best,photo};return go('not-found')}
+const pid=S.targetId||P[hash%P.length].id;const c=70+hash%28;const others=P.filter(p=>p.id!==pid).slice(hash%5,hash%5+2).map((p,i)=>({pid:p.id,c:Math.max(20,c-18-i*12-hash%6)}));
+LOGS.unshift({t:clock(),u:S.user.name,pid,c});S.res={pid,c,others,photo};go('result')}
+const bitsFromGray=g=>{let b='';for(let r=0;r<8;r++)for(let k=0;k<8;k++)b+=g[r*9+k]>g[r*9+k+1]?'1':'0';return b};
+const ham=(a,b)=>{let d=0;for(let i=0;i<64;i++)if(a[i]!==b[i])d++;return d};
+function dhash(src){try{const m=document.createElement('canvas');m.width=72;m.height=64;const mx=m.getContext('2d');mx.imageSmoothingQuality='high';mx.drawImage(src,0,0,72,64);const c=document.createElement('canvas');c.width=9;c.height=8;const x=c.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(m,0,0,9,8);const d=x.getImageData(0,0,9,8).data;const g=[];for(let i=0;i<72;i++)g.push(d[i*4]*.299+d[i*4+1]*.587+d[i*4+2]*.114);return bitsFromGray(g)}catch(e){return null}}
+const hashUrl=u=>new Promise(res=>{const i=new Image();i.onload=()=>res(dhash(i));i.onerror=()=>res(null);i.src=u});
+function addPhoto(p,f){p.photos.push(f.url);(p.hs=p.hs||[]).push(f.h||null)}
+function ensureHashes(){P.forEach(p=>{p.hs=p.hs||[];p.photos.forEach((u,i)=>{if(!p.hs[i])hashUrl(u).then(h=>{if(h){p.hs[i]=h;save()}})})})}
+function matchPhoto(h){const out=[];for(const p of P){let d=99,pi=0;(p.hs||[]).forEach((x,i)=>{if(x){const k=ham(x,h);if(k<d){d=k;pi=i}}});if(d<99)out.push({pid:p.id,d,pi})}return out.sort((a,b)=>a.d-b.d)}
+function realSearch(){const photo=S.photo;const m=matchPhoto(photo.h);const top=m[0];
+if(top&&top.d<=14){const c=Math.min(99,100-top.d*2);const others=m.slice(1,3).filter(o=>100-o.d*2>=50).map(o=>({pid:o.pid,c:100-o.d*2}));LOGS.unshift({t:clock(),u:S.user.name,pid:top.pid,c});S.res={pid:top.pid,c,others,photo,pi:top.pi};return go('result')}
+const best=Math.max(5,top?100-top.d*2:10);LOGS.unshift({t:clock(),u:S.user.name,pid:null,c:best});S.res={none:true,best,photo};go('not-found')}
+function readFile(f,cb){if(!f)return;const r=new FileReader();r.onload=()=>{const raw=r.result;const out=(u,h)=>cb({url:u,name:f.name,size:f.size,h:h||null});const img=new Image();img.onload=()=>{try{const s=Math.min(1,640/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);c.getContext('2d').drawImage(img,0,0,c.width,c.height);out(c.toDataURL('image/jpeg',.82),dhash(c))}catch(e){out(raw,dhash(img))}};img.onerror=()=>out(raw,null);img.src=raw};r.readAsDataURL(f)}
+const ACT={
+login(){},reset(){if(!S.cr){S.cr=true;toast('Click again to erase all saved data');setTimeout(()=>{S.cr=false},4000);return}try{localStorage.removeItem(KEY)}catch(e){}location.hash='';location.reload()},
+logout(){S.user=null;S.res=null;S.ready=false;go('login')},
+theme(){const h=document.documentElement;const cur=h.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');h.setAttribute('data-theme',cur==='dark'?'light':'dark');save()},
+togglepw(){const i=$('#l-pass');i.type=i.type==='password'?'text':'password'},
+'pick-search'(){$('#f-search').click()},'pick-search-cam'(){$('#f-search-cam').click()},
+'demo-match'(t){S.photo=null;S.demoHue=0;S.targetId=1;S.sim='match';S.ready=true;go('search-ready')},
+'demo-none'(){S.photo=null;S.demoHue=5;S.targetId=null;S.sim='none';S.ready=true;go('search-ready')},
+sim(t){S.sim=t.dataset.v;render()},
+scan(t){t.disabled=true;$('#scan').hidden=false;setTimeout(runSearch,1500)},
+'pick-other'(t){const pid=+t.dataset.pid,c=+t.dataset.c;const old=S.res;S.res={pid,c,others:[{pid:old.pid,c:old.c},...old.others.filter(o=>o.pid!==pid)],photo:old.photo};render()},
+'add-from-result'(){const p=pById(S.res.pid);if(S.res.photo){addPhoto(p,S.res.photo);save();toast('Photo added to '+p.name)}else toast('Upload a real photo in your search to add it')},
+'reg-from-nf'(){S.draft=S.res.photo?{url:S.res.photo.url,name:S.res.photo.name,h:S.res.photo.h||null}:{sample:true,hue:5};go('register')},
+'reg-photo'(){$('#f-reg').click()},'reg-cam'(){$('#f-reg-cam').click()},'reg-sample'(){S.draft={sample:true,hue:3};render()},
+ppage(t){S.ppage=+t.dataset.v;paintPersons()},
+pcat(t){S.pcat=t.dataset.v;S.ppage=1;paintPersons()},
+lf(t){S.lf=t.dataset.v;paintLogs()},
+openlog(t){const l=LOGS[+t.dataset.i];S.res=l.pid?{pid:l.pid,c:l.c,others:[],photo:null}:{none:true,best:l.c,photo:null};go(l.pid?'result':'not-found')},
+'add-photo'(){$('#f-add').click()},
+edit(){S.edit=true;render()},'edit-cancel'(){S.edit=false;render()},
+'edit-save'(){const p=pById(S.pid);const n=$('#e-name').value.trim();if(n.length<3)return toast('Enter a full name');Object.assign(p,{name:n,phone:$('#e-phone').value,cat:$('#e-cat').value,addr:$('#e-addr').value,notes:$('#e-notes').value});S.edit=false;toast('Changes saved');render()},
+del(){S.del=true;render()},'del-no'(){S.del=false;render()},
+'del-yes'(){const i=P.findIndex(p=>p.id===S.pid);const n=P[i].name;P.splice(i,1);for(let k=LOGS.length-1;k>=0;k--)if(LOGS[k].pid===S.pid)LOGS[k].pid=null;S.del=false;toast(n+' deleted');go('persons')},
+csv(){const rows=['Date,User,Result,Confidence,Status',...lFilter().map(l=>{const p=l.pid&&pById(l.pid);return [l.t,l.u,p?p.name:'Not registered',l.pid?l.c+'%':'',stat(l)[0]].map(x=>'"'+x+'"').join(',')})].join('\n');
+(navigator.clipboard?navigator.clipboard.writeText(rows):Promise.reject()).then(()=>toast('CSV copied to clipboard')).catch(()=>toast('Clipboard is blocked in this view'))}};
+document.addEventListener('click',e=>{const t=e.target.closest('[data-act],[data-go]');if(!t||t.disabled)return;
+if(t.dataset.act){const f=ACT[t.dataset.act];if(f)f(t);return}
+if(t.dataset.pid)S.pid=+t.dataset.pid;S.edit=false;S.del=false;
+if(t.dataset.go==='search'){S.ready=false;S.photo=null;S.targetId=null}
+go(t.dataset.go)});
+document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[role="button"]')){e.preventDefault();e.target.click()}});
+document.addEventListener('input',e=>{if(e.target.id==='pq'){S.pq=e.target.value;S.ppage=1;paintPersons()}if(e.target.id==='lq'){S.lq=e.target.value;paintLogs()}});
+document.addEventListener('submit',e=>{e.preventDefault();
+if(e.target.id==='lform'){const em=$('#l-email').value.trim(),pw=$('#l-pass').value;const er=$('#lerr');if(!/.+@.+/.test(em)||!pw){er.textContent='Enter a valid email and your password.';er.hidden=false;return}S.user={name:'Qundeel'};go('dashboard');return}
+if(e.target.id==='rform'){const er=$('#rerr');const v=id=>$(id).value.trim();const fail=m=>{er.textContent=m;er.hidden=false};
+if(v('#r-name').length<3)return fail('Enter the full name.');if(!/^\d{5}-\d{7}-\d$/.test(v('#r-cnic')))return fail('CNIC must look like 35201-1234567-1.');if(!/^03\d{2}-?\d{7}$/.test(v('#r-phone')))return fail('Phone must look like 0300-1234567.');if(!S.draft)return fail('Add a face photo first.');if(!$('#r-consent').checked)return fail('Consent is required before saving.');
+const id=Math.max(0,...P.map(p=>p.id))+1;P.unshift({id,name:v('#r-name'),cnic:v('#r-cnic'),phone:v('#r-phone'),cat:$('#r-cat').value,addr:v('#r-addr'),reg:'06 Nov 2026',notes:v('#r-notes')||'—',hue:id%6,photos:S.draft.url?[S.draft.url]:[],hs:S.draft.url?[S.draft.h||null]:[]});S.pq='';S.pcat='All';S.ppage=1;S.draft=undefined;toast(v('#r-name')+' registered');go('persons')}});
+$('#f-search').addEventListener('change',e=>{readFile(e.target.files[0],f=>{S.photo=f;S.ready=true;S.targetId=null;S.sim='match';go('search-ready')});e.target.value=''});
+$('#f-search-cam').addEventListener('change',e=>{readFile(e.target.files[0],f=>{S.photo=f;S.ready=true;S.targetId=null;S.sim='match';go('search-ready')});e.target.value=''});
+$('#f-reg').addEventListener('change',e=>{readFile(e.target.files[0],f=>{S.draft=f;render()});e.target.value=''});
+$('#f-reg-cam').addEventListener('change',e=>{readFile(e.target.files[0],f=>{S.draft=f;render()});e.target.value=''});
+$('#f-add').addEventListener('change',e=>{readFile(e.target.files[0],f=>{addPhoto(pById(S.pid),f);toast('Photo added');render()});e.target.value=''});
+document.addEventListener('dragover',e=>{const d=e.target.closest('.drop');if(d){e.preventDefault();d.classList.add('over')}});
+document.addEventListener('dragleave',e=>{const d=e.target.closest('.drop');if(d)d.classList.remove('over')});
+document.addEventListener('drop',e=>{const d=e.target.closest('.drop');if(!d)return;e.preventDefault();const f=e.dataTransfer.files[0];if(f&&f.type.startsWith('image/'))readFile(f,x=>{S.photo=x;S.ready=true;S.targetId=null;S.sim='match';go('search-ready')});else toast('Drop an image file')});
+ensureHashes();render();
+</script>
+
+</body></html>
